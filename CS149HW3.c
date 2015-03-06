@@ -2,8 +2,8 @@
  ============================================================================
  Project     : CS 149 HW 2
  Authors     : Gabriel Orellana & Olin Wong
- Class		 : CS 149, Section 6
- Term		 : Spring 2015
+ Class	     : CS 149, Section 6
+ Term	     : Spring 2015
  San Jose State University
  ============================================================================
  */
