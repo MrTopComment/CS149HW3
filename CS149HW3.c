@@ -1,6 +1,6 @@
 /*
  ============================================================================
- Project     : CS 149 HW 2
+ Project     : CS 149 HW 3
  Authors     : Gabriel Orellana & Olin Wong
  Class	     : CS 149, Section 6
  Term	     : Spring 2015
