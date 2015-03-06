@@ -15,7 +15,7 @@
 
 #define NUM_RIDERS_N	5 // Number of riders
 #define NUM_DRIVERS_M	4 // Number of drivers
-#define MAIN_SLEEP_T	2 // Time the main method will run
+#define MAIN_SLEEP_T	20 // Time the main method will run
 
 void *rider_function(void *arg) // function for the riders
 {
