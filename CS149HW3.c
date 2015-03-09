@@ -2,8 +2,8 @@
  ============================================================================
  Project     : CS 149 HW 3
  Authors     : Gabriel Orellana & Olin Wong
- Class	     : CS 149, Section 6
- Term	     : Spring 2015
+ Class		 : CS 149, Section 6
+ Term		 : Spring 2015
  San Jose State University
  ============================================================================
  */
@@ -12,20 +12,35 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <signal.h>
+#include <time.h>
 
 #define NUM_RIDERS_N	5 // Number of riders
-#define NUM_DRIVERS_M	1 // Number of drivers
-#define MAIN_SLEEP_T	2 // Time the main method will run
+#define NUM_DRIVERS_M	5 // Number of drivers
 #define L				3 // The size of the queue
+#define T				50 // The time the main program runs
 
+int ridersServed = 0;
 int queueCount = 0;
+int IDRider[NUM_RIDERS_N+1000];
+int IDDriver[NUM_DRIVERS_M+1000];
 int waitingQueue[L];
+int threadCountRiders = 0;
+int threadCountDrivers = NUM_RIDERS_N;
 pthread_mutex_t lock;
+
+void exitfunc(int sig)
+{
+	printf("Number of Riders Served: %i\n",ridersServed);
+	_exit(1);
+}
 
 void *rider_function(void *arg) // function for the riders
 {
 	pthread_mutex_lock(&lock);
-	printf("Rider Created\n");
+	IDRider[threadCountRiders] = threadCountRiders  + 1;
+	printf("Rider %i Created\n",IDRider[threadCountRiders]);
+	threadCountRiders++;
 	if(queueCount < L)
 	{
 		waitingQueue[queueCount] = -1; // -1 as a sign that threre's a thread there
@@ -41,24 +56,28 @@ void *rider_function(void *arg) // function for the riders
 			sleep(1);
 		}
 	}
+	sleep(rand()%5);
 	pthread_mutex_unlock(&lock);
 	return NULL;
 }
 void *driver_function(void *arg) // function for the drivers
 {
 	pthread_mutex_lock(&lock);
-	printf("Driver arrives\n");
+	IDDriver[threadCountDrivers] = threadCountDrivers + 1;
+	printf("Driver %i arrives\n", IDDriver[threadCountDrivers]);
+	threadCountDrivers++;
 	if(queueCount > 0)
 	{
-		int x;
+		int x; // counter for the for loop
 		printf("takes rider\n");
-		sleep(1);
+		sleep(rand()%5);
 		for(x = 0; x <= L; x++)
 		{
 			if(waitingQueue[x] != -1)
 			{
 				waitingQueue[x] = NULL;
 				queueCount--;
+				ridersServed++;
 				break;
 			}
 		}
@@ -68,21 +87,28 @@ void *driver_function(void *arg) // function for the drivers
 		while(queueCount == 0)
 		{
 			printf("waiting for riders\n");
+
 			sleep(1);
 		}
 	}
+	sleep(rand()%5);
 	pthread_mutex_unlock(&lock);
 	return NULL;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+	time_t startTime = time(NULL);
+	printf("Welcome to the premier taxi service company ORANGE-SAUCE. \n");
+	signal(SIGALRM, exitfunc);
+	alarm(T);
+
 	pthread_t tidRiders[NUM_RIDERS_N]; // tid for riders
 	pthread_t tidDrivers[NUM_DRIVERS_M]; // tid for drivers
 
 	int i; // counter for riders
 	int j; // counter for drivers
-
+    do {
 	if (pthread_mutex_init(&lock, NULL) != 0) // creating the mutex
 	    {
 	        printf("\n mutex init failed\n");
@@ -104,6 +130,7 @@ int main(void)
 	  			}
 			if(i < NUM_DRIVERS_M)
 			{
+
 				if ( pthread_create( &tidDrivers[i], NULL, driver_function, NULL) ) {
 						printf("error creating thread.");
 						abort();
@@ -141,6 +168,9 @@ int main(void)
 			}
 		}
 	}
+	threadCountRiders = 0;
+	threadCountDrivers = NUM_RIDERS_N;
 	pthread_mutex_destroy(&lock); // destroying the mutex
+    } while (time(NULL) < startTime + T);
 	  return 0;
 }
