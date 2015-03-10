@@ -17,8 +17,8 @@
 
 #define NUM_RIDERS_N	5 // Number of riders
 #define NUM_DRIVERS_M	5 // Number of drivers
-#define L				3 // The size of the queue
-#define T				50 // The time the main program runs
+#define L				5 // The size of the queue
+#define T				20 // The time the main program runs
 
 int ridersServed = 0;
 int queueCount = 0;
@@ -32,6 +32,7 @@ pthread_mutex_t lock;
 void exitfunc(int sig)
 {
 	printf("Number of Riders Served: %i\n",ridersServed);
+	printf("Riders remaining in the queue: %i\n",queueCount);
 	_exit(1);
 }
 
@@ -40,12 +41,12 @@ void *rider_function(void *arg) // function for the riders
 	pthread_mutex_lock(&lock);
 	IDRider[threadCountRiders] = threadCountRiders  + 1;
 	printf("Rider %i Created\n",IDRider[threadCountRiders]);
+	printf("Lenth of the queue: %i\n",queueCount);
 	threadCountRiders++;
 	if(queueCount < L)
 	{
 		waitingQueue[queueCount] = -1; // -1 as a sign that threre's a thread there
 		queueCount++;
-		printf("Rider added to queue\n");
 		sleep(1);
 	}
 	else
@@ -62,14 +63,15 @@ void *rider_function(void *arg) // function for the riders
 }
 void *driver_function(void *arg) // function for the drivers
 {
+	pthread_t tid;
 	pthread_mutex_lock(&lock);
 	IDDriver[threadCountDrivers] = threadCountDrivers + 1;
 	printf("Driver %i arrives\n", IDDriver[threadCountDrivers]);
-	threadCountDrivers++;
+	printf("Lenth of the queue: %i\n",queueCount);
 	if(queueCount > 0)
 	{
 		int x; // counter for the for loop
-		printf("takes rider\n");
+		printf("Driver %i riding\n", IDDriver[threadCountDrivers]);
 		sleep(rand()%5);
 		for(x = 0; x <= L; x++)
 		{
@@ -78,6 +80,10 @@ void *driver_function(void *arg) // function for the drivers
 				waitingQueue[x] = NULL;
 				queueCount--;
 				ridersServed++;
+				threadCountRiders--;
+				printf("Rider %i completed riding\n",IDRider[threadCountRiders]);
+				threadCountRiders++;
+				printf("Lenth of the queue: %i\n",queueCount);
 				break;
 			}
 		}
@@ -87,10 +93,10 @@ void *driver_function(void *arg) // function for the drivers
 		while(queueCount == 0)
 		{
 			printf("waiting for riders\n");
-
 			sleep(1);
 		}
 	}
+	threadCountDrivers++;
 	sleep(rand()%5);
 	pthread_mutex_unlock(&lock);
 	return NULL;
